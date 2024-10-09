@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おみくじAI - 詳細な運勢</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-red-100 to-white flex flex-col">
+    <header class="bg-red-800 text-white p-4">
+        <nav class="container mx-auto flex justify-between items-center">
+            <div class="text-2xl font-bold">おみくじAI</div>
+            <ul class="flex space-x-4">
+                <li><a href="#" class="hover:text-red-200">ホーム</a></li>
+                <li><a href="#" class="hover:text-red-200">履歴</a></li>
+                <li><a href="#" class="hover:text-red-200">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-center p-4">
+        <h1 class="text-4xl font-bold mb-8 text-red-800">おみくじAI</h1>
+        <div id="drawButton">
+            <button onclick="drawOmikuji()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                おみくじを引く
+            </button>
+        </div>
+        <div id="result" class="hidden text-center">
+            <div class="bg-white border-4 border-red-800 rounded-lg p-8 shadow-lg max-w-2xl">
+                <h2 id="fortune" class="text-3xl font-bold mb-4 text-red-800"></h2>
+                <p class="text-lg mb-4">今日のあなたの運勢は<span id="fortuneText"></span>です。</p>
+                <p id="generalAdvice" class="text-lg mb-6 italic"></p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-bold text-red-800">恋愛運</h3>
+                        <p id="loveAdvice"></p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-red-800">仕事運</h3>
+                        <p id="workAdvice"></p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-red-800">健康運</h3>
+                        <p id="healthAdvice"></p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-red-800">金運</h3>
+                        <p id="moneyAdvice"></p>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h3 class="font-bold text-red-800">ラッキーアイテム</h3>
+                    <p id="luckyItem"></p>
+                </div>
+            </div>
+            <button onclick="resetOmikuji()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full">
+                もう一度引く
+            </button>
+            <div class="mt-4 flex justify-center space-x-4">
+                <button onclick="shareTwitter()" class="bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-full flex items-center">
+                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                    </svg>
+                    Twitterでシェア
+                </button>
+                <button onclick="shareFacebook()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full flex items-center">
+                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebookでシェア
+                </button>
+                <button onclick="saveAsImage()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    画像として保存
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-red-800 text-white p-4 mt-8">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2024 おみくじAI. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <canvas id="resultCanvas" class="hidden"></canvas>
+
+    <script>
+        let currentFortune = '';
+        const fortunes = [
+            { name: '大吉', weight: 10 },
+            { name: '中吉', weight: 20 },
+            { name: '小吉', weight: 30 },
+            { name: '吉', weight: 20 },
+            { name: '末吉', weight: 15 },
+            { name: '凶', weight: 5 }
+        ];
+
+        const advices = {
+            '大吉': {
+                general: '素晴らしい1日になるでしょう。自信を持って行動してください。',
+                love: '運命の出会いがあるかもしれません。心を開いて過ごしましょう。',
+                work: '大きなチャンスが訪れます。積極的に挑戦してみましょう。',
+                health: '絶好調です。新しい運動や趣味を始めるのに最適な時期です。',
+                money: '思わぬ収入があるかもしれません。投資も吉です。',
+                luckyItem: '赤い財布'
+            },
+            '中吉': {
+                general: '良い出来事が待っています。前向きな姿勢を保ちましょう。',
+                love: '既存の関係が深まる時期です。大切な人との時間を大切にしましょう。',
+                work: '努力が実を結びます。粘り強く取り組んでください。',
+                health: '適度な運動を心がけると、さらに健康になれるでしょう。',
+                money: '堅実な金銭管理が幸運を呼び込みます。',
+                luckyItem: '青いペン'
+            },
+            '小吉': {
+                general: '小さな幸せが積み重なる日です。感謝の気持ちを忘れずに。',
+                love: '穏やかな愛情が育つ時期です。相手の気持ちを大切にしましょう。',
+                work: '地道な努力が評価されます。コツコツと頑張りましょう。',
+                health: 'バランスの取れた食事を心がけると、体調が良くなります。',
+                money: '無駄遣いに注意すれば、安定した財政状態を保てます。',
+                luckyItem: '緑の植物'
+            },
+            '吉': {
+                general: '平穏な1日になるでしょう。日常の小さな幸せを大切にしてください。',
+                love: '新しい出会いがあるかもしれません。積極的に行動しましょう。',
+                work: '新しいスキルを学ぶのに適した時期です。自己啓発に励みましょう。',
+                health: '軽い運動を始めるのに良い時期です。散歩やヨガがおすすめです。',
+                money: '計画的な支出を心がけると、家計が改善されるでしょう。',
+                luckyItem: '黄色いハンカチ'
+            },
+            '末吉': {
+                general: '慎重に行動すれば、困難を乗り越えられます。焦らず着実に進みましょう。',
+                love: '相手の気持ちを理解するよう努めましょう。コミュニケーションが大切です。',
+                work: '困難に直面するかもしれませんが、諦めずに取り組めば道が開けます。',
+                health: 'ストレス解消を意識しましょう。十分な睡眠を取ることが大切です。',
+                money: '衝動買いは控えめにしましょう。節約を心がけると良いでしょう。',
+                luckyItem: '紫のマスク'
+            },
+            '凶': {
+                general: '困難な状況に直面するかもしれません。冷静さを保ち、慎重に行動しましょう。',
+                love: '誤解が生じやすい時期です。率直なコミュニケーションを心がけましょう。',
+                work: '予期せぬトラブルに備えましょう。同僚や上司のサポートを求めるのも良いでしょう。',
+                health: '体調を崩しやすい時期です。十分な休養と栄養摂取を心がけましょう。',
+                money: '不要な出費を避け、貯蓄に励みましょう。',
+                luckyItem: '白いハンドタオル'
+            }
+        };
+
+        function weightedRandom(items) {
+            const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+            let random = Math.random() * totalWeight;
+            for (const item of items) {
+                if (random < item.weight) {
+                    return item.name;
+                }
+                random -= item.weight;
+            }
+        }
+
+        function drawOmikuji() {
+            currentFortune = weightedRandom(fortunes);
+            const advice = advices[currentFortune];
+
+            document.getElementById('fortune').textContent = currentFortune;
+            document.getElementById('fortuneText').textContent = currentFortune;
+            document.getElementById('generalAdvice').textContent = advice.general;
+            document.getElementById('loveAdvice').textContent = advice.love;
+            document.getElementById('workAdvice').textContent = advice.work;
+            document.getElementById('healthAdvice').textContent = advice.health;
+            document.getElementById('moneyAdvice').textContent = advice.money;
+            document.getElementById('luckyItem').textContent = advice.luckyItem;
+
+            document.getElementById('drawButton').classList.add('hidden');
+            document.getElementById('result').classList.remove('hidden');
+        }
+
+        function resetOmikuji() {
+            document.getElementById('drawButton').classList.remove('hidden');
+            document.getElementById('result').classList.add('hidden');
+        }
+
+        function shareTwitter() {
+            const text = `私の今日の運勢は「${currentFortune}」です！\n${advices[currentFortune].general}\n#おみくじAI`;
+            const url = 'https://your-omikuji-ai-url.com'; // あなたのウェブサイトのURLに置き換えてください
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+        }
+
+        function shareFacebook() {
+            const url = 'https://your-omikuji-ai-url.com'; // あなたのウェブサイトのURLに置き換えてください
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+        }
+
+        function saveAsImage() {
+            const resultDiv = document.querySelector('#result > div');
+            const canvas = document.getElementById('resultCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size to match the result div
+            canvas.width = resultDiv.offsetWidth;
+            canvas.height = resultDiv.offsetHeight;
+
+            // Draw white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw border
+            ctx.strokeStyle = '#9B2C2C';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+            // Set text styles
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // Draw fortune
+            ctx.font = 'bold 36px "Noto Sans JP"';
+            ctx.fillStyle = '#9B2C2C';
+            ctx.fillText(currentFortune, canvas.width / 2, 20);
+
+            // Draw general advice
+            ctx.font = '18px "Noto Sans JP"';
+            ctx.fillStyle = 'black';
+            const generalAdvice = advices[currentFortune].general;
+            wrapText(ctx, generalAdvice, canvas.width / 2, 70, canvas.width - 40, 24);
+
+            // Draw other advice
+            const adviceTypes = ['恋愛運', '仕事運', '健康運', '金運'];
+            const adviceKeys = ['love', 'work', 'health', 'money'];
+            let yOffset = 150;
+
+            for (let i = 0; i < adviceTypes.length; i++) {
+                ctx.font = 'bold 18px "Noto Sans JP"';
+                ctx.fillStyle = '#9B2C2C';
+                ctx.fillText(adviceTypes[i], canvas.width / 2, yOffset);
+
+                ctx.font = '16px "Noto Sans JP"';
+                ctx.fillStyle = 'black';
+                const advice = advices[currentFortune][adviceKeys[i]];
+                yOffset = wrapText(ctx, advice, canvas.width / 2, yOffset + 30, canvas.width - 40, 20) + 20;
+            }
+
+            // Draw lucky item
+            ctx.font = 'bold 18px "Noto Sans JP"';
+            ctx.fillStyle = '#9B2C2C';
+            ctx.fillText('ラッキーアイテム', canvas.width / 2, yOffset);
+
+            ctx.font = '16px "Noto Sans JP"';
+            ctx.fillStyle = 'black';
+            ctx.fillText(advices[currentFortune].luckyItem, canvas.width / 2, yOffset + 30);
+
+            // Convert canvas to image and trigger download
+            const image = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `おみくじ結果_${currentFortune}.png`;
+            link.href = image;
+            link.click();
+        }
+
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+            const words = text.split('');
+            let line = '';
+            let testLine = '';
+            let lineArray = [];
+
+            for (let n = 0; n < words.length; n++) {
+                testLine += words[n];
+                let metrics = ctx.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lineArray.push(line);
+                    line = words[n];
+                    testLine = words[n];
+                }
+                else {
+                    line += words[n];
+                }
+                if (n === words.length - 1) {
+                    lineArray.push(line);
+                }
+            }
+
+            for (let k = 0; k < lineArray.length; k++) {
+                ctx.fillText(lineArray[k], x, y);
+                y += lineHeight;
+            }
+
+            return y;
+        }
+    </script>
+</body>
+</html>
